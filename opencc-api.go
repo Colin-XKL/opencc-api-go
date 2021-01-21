@@ -30,7 +30,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	title := r.FormValue("title")
 	content := r.FormValue("content")
 	fmt.Println("title: ", title)
-	//fmt.Println(content)
 
 	modeStr := string(r.URL.Path)
 	mode := strings.Split(modeStr, "/")[1]
@@ -51,7 +50,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	//if valid {
+
 	cc, err := occ.NewOpenCC(mode)
 	if err != nil {
 		fmt.Println(err)
@@ -62,7 +61,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	output, err = cc.ConvertText(content)
 	content = output
 	fmt.Println("Converted")
-	//}
 
 	ret := new(Ret)
 	ret.Title = title
@@ -71,6 +69,5 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if e != nil {
 		fmt.Println(e)
 	}
-	//fmt.Println(string(retJson))
 	fmt.Fprint(w, string(retJson))
 }
