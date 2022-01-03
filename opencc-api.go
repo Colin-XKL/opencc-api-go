@@ -64,6 +64,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	content = output
 	fmt.Println("Converted")
 	fmt.Println("Title: ", title)
+	fmt.Println("Content Length: ", len(content))
 
 	ret := new(Ret)
 	ret.Title = title
