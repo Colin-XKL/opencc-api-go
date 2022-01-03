@@ -5,7 +5,7 @@ OpenCC API in golang, compatible with HenryQW's TTRSS OpenCC plugin, **with ARM 
 
 Listen to 3000 by default.
 
-You can create an instance use `docker run -d -p 8000:8000 --restart=always --name=opencc colinxkl/opencc-api-go`
+You can create an instance use `docker run -d -p 3000:3000 --restart=always --name=opencc colinxkl/opencc-api-go`
 
 API call like this:
 ```bash
