@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	occ "github.com/gwd0715/opencc"
 	"log"
 	"net/http"
 	"strings"
+
+	occ "github.com/gwd0715/opencc"
 )
 
 type Ret struct {
@@ -20,7 +21,9 @@ var SCHEMES = []string{
 
 func main() {
 	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe("localhost:8000", nil))
+	log.Println("OpenCC API in Go by Colin")
+	log.Println("Server start")
+	log.Fatal(http.ListenAndServe("localhost:3000", nil))
 }
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Hit")
@@ -57,8 +60,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	output, err := cc.ConvertText(title)
-	title = output
-	output, err = cc.ConvertText(content)
+	title = strings.TrimSpace(output)
+	output, err = cc.ConvertText(content) // 如有err返回空字符串
 	content = output
 	fmt.Println("Converted")
 
