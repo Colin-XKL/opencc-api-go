@@ -3,14 +3,14 @@ OpenCC API server written in golang
 
 OpenCC API in golang, compatible with HenryQW's TTRSS OpenCC plugin, **with ARM support!**
 
-Listen to 8000 by default.
+Listen to 3000 by default.
 
 You can create an instance use `docker run -d -p 8000:8000 --restart=always --name=opencc colinxkl/opencc-api-go`
 
 API call like this:
 ```bash
 curl --request POST \                                                                
-  --url http://localhost:8000/t2s \
+  --url http://localhost:3000/t2s \
   --header 'Content-Type: application/x-www-form-urlencoded' \
   --data 'title=繁體中文（中國大陸、澳門、馬新常稱繁體中文，台灣常稱正體中文或繁體中文）
           &content=實際上，兩岸三地的繁體中文出版物並不拘泥於本地標準，有時使用其他字形和異體字是很頻繁的。'
