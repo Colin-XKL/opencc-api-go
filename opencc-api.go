@@ -23,20 +23,19 @@ func main() {
 	http.HandleFunc("/", handler)
 	log.Println("OpenCC API in Go by Colin")
 	log.Println("Server start")
-	log.Fatal(http.ListenAndServe("localhost:3000", nil))
+	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Hit")
 	fmt.Printf("URL= %q \n", r.URL.Path)
 
 	r.ParseForm()
 	title := r.FormValue("title")
 	content := r.FormValue("content")
-	fmt.Println("title: ", title)
+	// fmt.Println("title: ", title)
 
 	modeStr := string(r.URL.Path)
 	mode := strings.Split(modeStr, "/")[1]
-	fmt.Println(mode)
+	// fmt.Println(mode)
 
 	valid := false
 	for _, value := range SCHEMES {
@@ -64,6 +63,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	output, err = cc.ConvertText(content) // 如有err返回空字符串
 	content = output
 	fmt.Println("Converted")
+	fmt.Println("Title: ", title)
 
 	ret := new(Ret)
 	ret.Title = title
