@@ -23,7 +23,7 @@ func main() {
 	http.HandleFunc("/", handler)
 	log.Println("OpenCC API in Go by Colin")
 	log.Println("Server start")
-	log.Fatal(http.ListenAndServe("localhost:8000", nil))
+	log.Fatal(http.ListenAndServe("0.0.0.0:8000", nil))
 }
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("URL= %q \n", r.URL.Path)
