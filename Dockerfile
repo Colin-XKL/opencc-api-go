@@ -10,7 +10,7 @@ WORKDIR /
 COPY --from=build /opencc-api /opencc-api
 
 COPY --from=build /go/pkg/mod/github.com /go/pkg/mod/github.com
-EXPOSE 8000
+EXPOSE 3000
 LABEL author="Colin"
 LABEL email="Colin_XKL@outlook.com"
 ENTRYPOINT ["/opencc-api"]
