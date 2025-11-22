@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	occ "github.com/gwd0715/opencc"
+	occ "github.com/longbridgeapp/opencc"
 )
 
 type Ret struct {
@@ -53,14 +53,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	cc, err := occ.NewOpenCC(mode)
+	cc, err := occ.New(mode)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	output, err := cc.ConvertText(title)
+	output, err := cc.Convert(title)
+	if err != nil {
+		fmt.Println(err)
+	}
 	title = strings.TrimSpace(output)
-	output, err = cc.ConvertText(content) // 如有err返回空字符串
+	output, err = cc.Convert(content) // 如有err返回空字符串
+	if err != nil {
+		fmt.Println(err)
+	}
 	content = output
 	fmt.Println("Converted")
 	fmt.Println("Title: ", title)
