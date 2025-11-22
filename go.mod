@@ -1,5 +1,10 @@
 module opencc-api-go
 
-require github.com/gwd0715/opencc v0.0.0-20201117042608-2c11e1c0f1e2
+go 1.25
 
-go 1.15
+require github.com/longbridgeapp/opencc v0.3.13
+
+require (
+	github.com/liuzl/cedar-go v0.0.0-20170805034717-80a9c64b256d // indirect
+	github.com/liuzl/da v0.0.0-20180704015230-14771aad5b1d // indirect
+)
