@@ -11,5 +11,4 @@ COPY --from=build /opencc-api /opencc-api
 
 EXPOSE 3000
 LABEL author="Colin"
-LABEL email="Colin_XKL@outlook.com"
 ENTRYPOINT ["/opencc-api"]
