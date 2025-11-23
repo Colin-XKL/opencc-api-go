@@ -15,16 +15,74 @@ type Ret struct {
 	Content string `json:"content"`
 }
 
+type ConvertRequest struct {
+	Text string `json:"text"`
+}
+
+type ConvertResponse struct {
+	Converted string `json:"converted"`
+}
+
 var SCHEMES = []string{
 	"s2t", "t2s", "s2tw", "tw2s", "s2hk", "hk2s", "s2twp", "tw2sp", "t2tw", "t2hk",
 }
 
 func main() {
 	http.HandleFunc("/", handler)
+	http.HandleFunc("/api/", apiHandler)
 	log.Println("OpenCC API in Go by Colin")
 	log.Println("Server start")
 	log.Fatal(http.ListenAndServe("0.0.0.0:3000", nil))
 }
+
+func apiHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	mode := strings.TrimPrefix(r.URL.Path, "/api/")
+	valid := false
+	for _, value := range SCHEMES {
+		if value == mode {
+			valid = true
+			break
+		}
+	}
+
+	if !valid {
+		http.Error(w, "Invalid convert scheme", http.StatusBadRequest)
+		return
+	}
+
+	var req ConvertRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	cc, err := occ.New(mode)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to initialize OpenCC: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	converted, err := cc.Convert(req.Text)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Conversion failed: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	resp := ConvertResponse{
+		Converted: converted,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("Failed to write response: %v", err)
+	}
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("URL= %q \n", r.URL.Path)
 
