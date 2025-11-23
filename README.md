@@ -9,12 +9,11 @@ You can create an instance use `docker run -d -p 3000:3000 --restart=always --na
 
 API call like this:
 ```bash
-curl --request POST \                                                                
+curl --request POST \
   --url http://localhost:3000/t2s \
   --header 'Content-Type: application/x-www-form-urlencoded' \
   --data 'title=繁體中文（中國大陸、澳門、馬新常稱繁體中文，台灣常稱正體中文或繁體中文）
           &content=實際上，兩岸三地的繁體中文出版物並不拘泥於本地標準，有時使用其他字形和異體字是很頻繁的。'
-
 ```
 Example response:
 ```
