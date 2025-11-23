@@ -44,6 +44,26 @@ Params
 title, text to convert, optional
 content, text to convert, optional
 
+## JSON API
+
+A generic JSON API is available at `/api/:convert-mode`.
+
+```bash
+curl --request POST \
+  --url http://localhost:3000/api/t2s \
+  --header 'Content-Type: application/json' \
+  --data '{"text": "繁體中文"}'
+```
+
+Response:
+```json
+{
+  "converted": "繁体中文"
+}
+```
+
+The `:convert-mode` can be any of the schemes listed above (e.g., `s2t`, `t2s`, `s2tw`, etc.).
+
 ## More Documents
 * https://github.com/longbridgeapp/opencc#預設配置文件
 * https://github.com/HenryQW/OpenCC.henry.wang

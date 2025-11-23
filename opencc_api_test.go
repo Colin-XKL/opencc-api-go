@@ -48,3 +48,44 @@ func TestHandler(t *testing.T) {
 		t.Errorf("Content not converted correctly, got: %s", ret.Content)
 	}
 }
+
+func TestApiHandler(t *testing.T) {
+	// Test case: s2t via JSON API
+	reqBody := `{"text": "简体中文"}`
+	req, err := http.NewRequest("POST", "/api/s2t", strings.NewReader(reqBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	rr := httptest.NewRecorder()
+	// We need to register the handler same as main, but since main registers it globally and we are in test,
+	// we might need to simulate the router or just test the specific handler if I export it.
+	// For now, let's assume I'll name the new handler `apiHandler`.
+	// However, `http.HandleFunc` in main is not easily accessible here unless I expose the mux or register it.
+	// The existing test creates a HandlerFunc from `handler`.
+	// I'll assume I'll create a function `apiHandler` and test it directly here.
+
+	handler := http.HandlerFunc(apiHandler)
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+	var resp map[string]string
+	if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
+		t.Errorf("failed to unmarshal response: %v", err)
+	}
+
+	if got, ok := resp["converted"]; !ok {
+		t.Errorf("response missing 'converted' field")
+	} else {
+		t.Logf("Converted: %s", got)
+		if !strings.Contains(got, "簡體中文") {
+			t.Errorf("Text not converted correctly, got: %s", got)
+		}
+	}
+}
