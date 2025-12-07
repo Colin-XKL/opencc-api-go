@@ -3,7 +3,12 @@ FROM golang:1.25-alpine AS build
 WORKDIR /app
 COPY . .
 RUN go mod download
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /opencc-api
+
+ARG VERSION
+ARG BUILD_TIME
+ARG GIT_COMMIT
+
+RUN CGO_ENABLED=0 go build -ldflags="-s -w -X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME} -X main.GitCommit=${GIT_COMMIT}" -o /opencc-api
 
 FROM alpine AS deploy
 WORKDIR /

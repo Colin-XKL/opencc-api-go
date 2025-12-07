@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 
@@ -45,10 +46,22 @@ var SCHEMES = []string{
 	"s2t", "t2s", "s2tw", "tw2s", "s2hk", "hk2s", "s2twp", "tw2sp", "t2tw", "t2hk",
 }
 
+var (
+	Version   = "dev"
+	BuildTime = "unknown"
+	GitCommit = "unknown"
+)
+
 func main() {
+	log.Println("OpenCC API in Go by Colin")
+	log.Printf("Version: %s", Version)
+	log.Printf("Build Time: %s", BuildTime)
+	log.Printf("Git Commit: %s", GitCommit)
+	log.Printf("Go Version: %s", runtime.Version())
+	log.Printf("Platform: %s/%s", runtime.GOOS, runtime.GOARCH)
+
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/api/", apiHandler)
-	log.Println("OpenCC API in Go by Colin")
 	log.Println("Server start")
 	log.Fatal(http.ListenAndServe("0.0.0.0:3000", nil))
 }
