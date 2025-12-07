@@ -6,9 +6,27 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	occ "github.com/longbridgeapp/opencc"
 )
+
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
+func (rw *responseWriter) Write(b []byte) (int, error) {
+	if rw.statusCode == 0 {
+		rw.statusCode = http.StatusOK
+	}
+	return rw.ResponseWriter.Write(b)
+}
 
 type Ret struct {
 	Title   string `json:"title"`
@@ -36,12 +54,22 @@ func main() {
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	rw := &responseWriter{ResponseWriter: w}
+
+	var contentLength int
+	var mode string
+
+	defer func() {
+		log.Printf("[INFO] Title: %q | Content-Length: %d | Mode: %s | Duration: %v | Status: %d", "-", contentLength, mode, time.Since(start), rw.statusCode)
+	}()
+
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(rw, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	mode := strings.TrimPrefix(r.URL.Path, "/api/")
+	mode = strings.TrimPrefix(r.URL.Path, "/api/")
 	valid := false
 	for _, value := range SCHEMES {
 		if value == mode {
@@ -51,25 +79,26 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !valid {
-		http.Error(w, "Invalid convert scheme", http.StatusBadRequest)
+		http.Error(rw, "Invalid convert scheme", http.StatusBadRequest)
 		return
 	}
 
 	var req ConvertRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		http.Error(rw, "Invalid JSON payload", http.StatusBadRequest)
 		return
 	}
+	contentLength = len(req.Text)
 
 	cc, err := occ.New(mode)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to initialize OpenCC: %v", err), http.StatusInternalServerError)
+		http.Error(rw, fmt.Sprintf("Failed to initialize OpenCC: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	converted, err := cc.Convert(req.Text)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Conversion failed: %v", err), http.StatusInternalServerError)
+		http.Error(rw, fmt.Sprintf("Conversion failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -77,23 +106,34 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		Converted: converted,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
+	rw.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(rw).Encode(resp); err != nil {
 		log.Printf("Failed to write response: %v", err)
 	}
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("URL= %q \n", r.URL.Path)
+	start := time.Now()
+	rw := &responseWriter{ResponseWriter: w}
+
+	var title string
+	var contentLength int
+	var mode string
+
+	defer func() {
+		log.Printf("[INFO] Title: %q | Content-Length: %d | Mode: %s | Duration: %v | Status: %d", title, contentLength, mode, time.Since(start), rw.statusCode)
+	}()
 
 	r.ParseForm()
-	title := r.FormValue("title")
+	title = r.FormValue("title")
 	content := r.FormValue("content")
-	// fmt.Println("title: ", title)
+	contentLength = len(content)
 
 	modeStr := string(r.URL.Path)
-	mode := strings.Split(modeStr, "/")[1]
-	// fmt.Println(mode)
+	parts := strings.Split(modeStr, "/")
+	if len(parts) > 1 {
+		mode = parts[1]
+	}
 
 	valid := false
 	for _, value := range SCHEMES {
@@ -106,36 +146,39 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		mode = "t2s"
 	} else {
 		if !valid {
-			fmt.Fprint(w, "Invalid convert scheme.")
+			// Keeping existing behavior: status 200 with error message
+			fmt.Fprint(rw, "Invalid convert scheme.")
 			return
 		}
 	}
 
 	cc, err := occ.New(mode)
 	if err != nil {
-		fmt.Println(err)
+		// Keeping existing behavior: status 200 (implied) and print error to response?
+		// Previous code: fmt.Println(err) -> logged to server stdout, returned 200 with empty body?
+		// "fmt.Println(err); return"
+		// This means client got 200 OK and empty body.
+		// I will log error and return.
+		log.Printf("Error initializing OpenCC: %v", err)
 		return
 	}
 	output, err := cc.Convert(title)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Error converting title: %v", err)
 	}
-	title = strings.TrimSpace(output)
-	output, err = cc.Convert(content) // 如有err返回空字符串
+	titleConverted := strings.TrimSpace(output)
+	output, err = cc.Convert(content)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Error converting content: %v", err)
 	}
 	content = output
-	fmt.Println("Converted")
-	fmt.Println("Title: ", title)
-	fmt.Println("Content Length: ", len(content))
 
 	ret := new(Ret)
-	ret.Title = title
+	ret.Title = titleConverted
 	ret.Content = content
 	retJson, e := json.Marshal(ret)
 	if e != nil {
-		fmt.Println(e)
+		log.Printf("Error marshaling response: %v", e)
 	}
-	fmt.Fprint(w, string(retJson))
+	fmt.Fprint(rw, string(retJson))
 }
