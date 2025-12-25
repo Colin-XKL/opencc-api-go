@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"log"
 	"net/http"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -47,9 +49,10 @@ var SCHEMES = []string{
 }
 
 var (
-	Version   = "dev"
-	BuildTime = "unknown"
-	GitCommit = "unknown"
+	Version     = "dev"
+	BuildTime   = "unknown"
+	GitCommit   = "unknown"
+	unescapeReg = regexp.MustCompile(`&([a-zA-Z0-9]+|#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6});`)
 )
 
 func main() {
@@ -64,6 +67,17 @@ func main() {
 	http.HandleFunc("/api/", apiHandler)
 	log.Println("Server start")
 	log.Fatal(http.ListenAndServe("0.0.0.0:3000", nil))
+}
+
+func safeUnescape(s string) string {
+	return unescapeReg.ReplaceAllStringFunc(s, func(match string) string {
+		unescaped := html.UnescapeString(match)
+		// Check if the unescaped string contains characters that should be preserved as entities
+		if strings.ContainsAny(unescaped, "<>&\"'") {
+			return match
+		}
+		return unescaped
+	})
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
@@ -109,6 +123,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req.Text = safeUnescape(req.Text)
 	converted, err := cc.Convert(req.Text)
 	if err != nil {
 		http.Error(rw, fmt.Sprintf("Conversion failed: %v", err), http.StatusInternalServerError)
@@ -141,6 +156,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	title = r.FormValue("title")
 	content := r.FormValue("content")
 	contentLength = len(content)
+
+	title = safeUnescape(title)
+	content = safeUnescape(content)
 
 	modeStr := string(r.URL.Path)
 	parts := strings.Split(modeStr, "/")
