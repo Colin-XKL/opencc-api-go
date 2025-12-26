@@ -82,6 +82,15 @@ func TestTTRSSHandler(t *testing.T) {
 			wantStatusCode: http.StatusOK, // The handler currently returns 200 for invalid scheme
 			wantError:      "Invalid convert scheme.",
 		},
+		{
+			name:           "t2s html encoded",
+			path:           "/t2s",
+			title:          "HTML Title &#x91CD;&#x9EDE;",
+			content:        `<h3>TLDR &#x91CD;&#x9EDE;</h3><p>Use &lt;b&gt; for bold.</p>`,
+			wantTitle:      "HTML Title 重点",
+			wantContent:    `<h3>TLDR 重点</h3><p>Use &lt;b&gt; for bold.</p>`,
+			wantStatusCode: http.StatusOK,
+		},
 	}
 
 	for _, tt := range tests {
@@ -177,6 +186,14 @@ func TestCommonJsonApiHandler(t *testing.T) {
 			body:           `{invalid json}`,
 			wantStatusCode: http.StatusBadRequest,
 			wantSubstring:  "Invalid JSON payload",
+		},
+		{
+			name:           "t2s html encoded",
+			method:         "POST",
+			path:           "/api/t2s",
+			body:           `{"text": "HTML encoded &#x91CD;&#x9EDE; with &lt;b&gt;tags&lt;/b&gt;"}`,
+			wantStatusCode: http.StatusOK,
+			wantSubstring:  "HTML encoded 重点 with &lt;b&gt;tags&lt;/b&gt;",
 		},
 	}
 
