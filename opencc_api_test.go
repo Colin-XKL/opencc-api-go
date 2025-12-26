@@ -56,7 +56,7 @@ func TestTTRSSHandler(t *testing.T) {
 			wantError:      "Invalid convert scheme.",
 		},
 		{
-			name:           "t2s html encoded encoded",
+			name:           "t2s html encoded",
 			path:           "/t2s",
 			title:          "HTML Title &#x91CD;&#x9EDE;",
 			content:        `<h3>TLDR &#x91CD;&#x9EDE;</h3><p>Use &lt;b&gt; for bold.</p>`,
